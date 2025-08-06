@@ -1,42 +1,91 @@
 class SpinningWheel {
   constructor() {
-    this.names = ["Alice", "Bob", "Charlie", "Diana", "Eve", "Frank"];
+    this.names = [];
     this.isSpinning = false;
     this.wheel = document.getElementById("wheel");
     this.spinBtn = document.getElementById("spinBtn");
     this.result = document.getElementById("result");
-    this.nameInput = document.getElementById("nameInput");
-    this.addNameBtn = document.getElementById("addNameBtn");
-    this.clearNamesBtn = document.getElementById("clearNamesBtn");
-    this.nameList = document.getElementById("nameList");
 
     // Scoreboard elements
     this.scoreboardBtn = document.getElementById("scoreboardBtn");
     this.backBtn = document.getElementById("backBtn");
     this.scoreboardContainer = document.getElementById("scoreboardContainer");
     this.scoreboardTableBody = document.getElementById("scoreboardTableBody");
+    this.updateBtn = document.getElementById("updateBtn");
+    this.addPersonBtn = document.getElementById("addPersonBtn");
     this.container = document.querySelector(".container");
+    this.isEditMode = false;
+    this.selectedRows = new Set();
+
+    // Modal elements
+    this.addPersonModal = document.getElementById("addPersonModal");
+    this.closeModalBtn = document.getElementById("closeModalBtn");
+    this.newPersonName = document.getElementById("newPersonName");
+    this.newPersonRole = document.getElementById("newPersonRole");
+    this.addPersonSubmitBtn = document.getElementById("addPersonSubmitBtn");
 
     this.init();
   }
 
+  async loadNamesFromCSV() {
+    try {
+      const response = await fetch("/api/scoreboard");
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Filter out removed people and extract names
+      this.names = data
+        .filter((row) => row.isRemoved !== "TRUE")
+        .map((row) => row.Name)
+        .filter((name) => name && name.trim() !== ""); // Remove empty names
+
+      this.renderWheel();
+    } catch (error) {
+      console.error("Error loading names from CSV:", error);
+      // Fallback to empty array if there's an error
+      this.names = [];
+      this.renderWheel();
+    }
+  }
+
   init() {
+    this.loadNamesFromCSV();
     this.renderWheel();
-    this.renderNameList();
     this.bindEvents();
   }
 
   bindEvents() {
     this.spinBtn.addEventListener("click", () => this.spin());
-    this.addNameBtn.addEventListener("click", () => this.addName());
-    this.clearNamesBtn.addEventListener("click", () => this.clearNames());
-    this.nameInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") this.addName();
-    });
 
     // Scoreboard events
     this.scoreboardBtn.addEventListener("click", () => this.showScoreboard());
     this.backBtn.addEventListener("click", () => this.showTrivia());
+    this.updateBtn.addEventListener("click", () => this.toggleEditMode());
+    this.addPersonBtn.addEventListener("click", () =>
+      this.showAddPersonModal()
+    );
+
+    // Modal events
+    this.closeModalBtn.addEventListener("click", () =>
+      this.hideAddPersonModal()
+    );
+    this.addPersonSubmitBtn.addEventListener("click", () =>
+      this.addNewPerson()
+    );
+    this.addPersonModal.addEventListener("click", (e) => {
+      if (e.target === this.addPersonModal) {
+        this.hideAddPersonModal();
+      }
+    });
+    this.newPersonName.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        this.addNewPerson();
+      }
+    });
   }
 
   renderWheel() {
@@ -44,51 +93,16 @@ class SpinningWheel {
 
     if (this.names.length === 0) {
       this.wheel.innerHTML =
-        '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 18px;">Add some names first!</div>';
+        '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 18px;">No names available</div>';
       return;
     }
 
     // Create a simple rectangular display
     const display = document.createElement("div");
     display.className = "name-display";
-    display.textContent = this.names[0] || "Add some names first!";
+    display.textContent = this.names[0] || "No names available";
     display.style.background = this.getNameGradient(this.names[0]);
     this.wheel.appendChild(display);
-  }
-
-  renderNameList() {
-    this.nameList.innerHTML = "";
-    this.names.forEach((name, index) => {
-      const li = document.createElement("li");
-      li.innerHTML = `
-                <span>${name}</span>
-                <button onclick="wheel.removeName(${index})">Remove</button>
-            `;
-      this.nameList.appendChild(li);
-    });
-  }
-
-  addName() {
-    const name = this.nameInput.value.trim();
-    if (name && !this.names.includes(name)) {
-      this.names.push(name);
-      this.nameInput.value = "";
-      this.renderWheel();
-      this.renderNameList();
-    }
-  }
-
-  removeName(index) {
-    this.names.splice(index, 1);
-    this.renderWheel();
-    this.renderNameList();
-  }
-
-  clearNames() {
-    this.names = [];
-    this.renderWheel();
-    this.renderNameList();
-    this.result.textContent = "";
   }
 
   spin() {
@@ -165,41 +179,28 @@ class SpinningWheel {
   showTrivia() {
     this.scoreboardContainer.style.display = "none";
     this.container.style.display = "block";
+    // Reload names from CSV when switching back to trivia view
+    this.loadNamesFromCSV();
   }
 
   async loadScoreboardData() {
     try {
-      const response = await fetch("standup_scoreboard.csv");
+      const response = await fetch("/api/scoreboard");
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const csvText = await response.text();
-      const data = this.parseCSV(csvText);
-      this.displayScoreboard(data);
+      const data = await response.json();
+
+      // Filter out rows where isRemoved is TRUE
+      const filteredData = data.filter((row) => row.isRemoved !== "TRUE");
+
+      this.displayScoreboard(filteredData);
     } catch (error) {
       console.error("Error loading scoreboard data:", error);
       this.displayScoreboard([]);
     }
-  }
-
-  parseCSV(csvText) {
-    const lines = csvText.trim().split("\n");
-    const headers = lines[0].split(",");
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(",");
-      const row = {};
-      headers.forEach((header, index) => {
-        const value = index < values.length ? values[index].trim() : "";
-        row[header.trim()] = value;
-      });
-      data.push(row);
-    }
-
-    return data;
   }
 
   displayScoreboard(data) {
@@ -212,18 +213,188 @@ class SpinningWheel {
 
     this.scoreboardTableBody.innerHTML = "";
 
-    sortedData.forEach((row) => {
+    sortedData.forEach((row, index) => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${row.Name || ""}</td>
-        <td>${row.isDev === "TRUE" ? "Developer" : "Non-Developer"}</td>
-        <td>${row.questionsAsked || "0"}</td>
-        <td>${row.questionsMissed || "0"}</td>
-        <td>${row.questionsAnsweredCorrectly || "0"}</td>
-        <td>${row.points || "0"}</td>
-      `;
+      tr.dataset.rowIndex = index;
+      tr.dataset.name = row.Name;
+
+      if (this.isEditMode) {
+        // In edit mode, add checkbox cell first
+        tr.innerHTML = `
+          <td><input type="checkbox" class="delete-checkbox"></td>
+          <td>${row.Name || ""}</td>
+          <td>${row.isDev === "TRUE" ? "Developer" : "Non-Developer"}</td>
+          <td>${row.questionsAsked || "0"}</td>
+          <td>${row.questionsMissed || "0"}</td>
+          <td>${row.questionsAnsweredCorrectly || "0"}</td>
+          <td>${row.points || "0"}</td>
+        `;
+      } else {
+        // Normal mode, no checkbox
+        tr.innerHTML = `
+          <td>${row.Name || ""}</td>
+          <td>${row.isDev === "TRUE" ? "Developer" : "Non-Developer"}</td>
+          <td>${row.questionsAsked || "0"}</td>
+          <td>${row.questionsMissed || "0"}</td>
+          <td>${row.questionsAnsweredCorrectly || "0"}</td>
+          <td>${row.points || "0"}</td>
+        `;
+      }
+
       this.scoreboardTableBody.appendChild(tr);
     });
+
+    // Add event listeners for checkboxes if in edit mode
+    if (this.isEditMode) {
+      this.addCheckboxListeners();
+    }
+  }
+
+  toggleEditMode() {
+    this.isEditMode = !this.isEditMode;
+
+    if (this.isEditMode) {
+      this.updateBtn.textContent = "Save";
+      this.updateBtn.classList.add("save-button");
+      this.updateBtn.classList.remove("update-button");
+      this.addDeleteColumn();
+      // Reload the scoreboard data to show checkboxes
+      this.loadScoreboardData();
+    } else {
+      this.updateBtn.textContent = "Update";
+      this.updateBtn.classList.add("update-button");
+      this.updateBtn.classList.remove("save-button");
+      this.removeDeleteColumn();
+      this.saveChanges();
+    }
+  }
+
+  addDeleteColumn() {
+    const thead = document.querySelector("#scoreboardTable thead tr");
+    const deleteHeader = document.createElement("th");
+    deleteHeader.textContent = "Delete";
+    thead.insertBefore(deleteHeader, thead.firstChild);
+  }
+
+  removeDeleteColumn() {
+    const thead = document.querySelector("#scoreboardTable thead tr");
+    const deleteHeader = thead.querySelector("th");
+    if (deleteHeader) {
+      thead.removeChild(deleteHeader);
+    }
+    // Reload the scoreboard data to remove checkboxes
+    this.loadScoreboardData();
+  }
+
+  addCheckboxListeners() {
+    const checkboxes = document.querySelectorAll(".delete-checkbox");
+    checkboxes.forEach((checkbox, index) => {
+      checkbox.addEventListener("change", (e) => {
+        const row = e.target.closest("tr");
+        const name = row.dataset.name;
+
+        if (e.target.checked) {
+          this.selectedRows.add(name);
+        } else {
+          this.selectedRows.delete(name);
+        }
+      });
+    });
+  }
+
+  async saveChanges() {
+    if (this.selectedRows.size === 0) {
+      this.loadScoreboardData();
+      return;
+    }
+
+    try {
+      // Convert Set to Array for API call
+      const selectedNames = Array.from(this.selectedRows);
+
+      // Send update request to server
+      const response = await fetch("/api/scoreboard/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ selectedNames }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Store the count before clearing
+      const removedCount = this.selectedRows.size;
+
+      // Clear selected rows and reload data
+      this.selectedRows.clear();
+      this.loadScoreboardData();
+
+      alert(result.message);
+    } catch (error) {
+      console.error("Error saving changes:", error);
+      alert("Error saving changes. Please try again.");
+    }
+  }
+
+  showAddPersonModal() {
+    this.addPersonModal.style.display = "block";
+    this.newPersonName.value = "";
+    this.newPersonRole.value = "Developer";
+    this.newPersonName.focus();
+  }
+
+  hideAddPersonModal() {
+    this.addPersonModal.style.display = "none";
+    this.newPersonName.value = "";
+  }
+
+  async addNewPerson() {
+    const name = this.newPersonName.value.trim();
+    const role = this.newPersonRole.value;
+
+    if (!name) {
+      alert("Please enter a name.");
+      return;
+    }
+
+    try {
+      const isDev = role === "Developer" ? "TRUE" : "FALSE";
+
+      const response = await fetch("/api/scoreboard/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: name,
+          isDev: isDev,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        this.hideAddPersonModal();
+        this.loadScoreboardData(); // Refresh the scoreboard
+        // Also refresh the names list for the trivia wheel
+        this.loadNamesFromCSV();
+        alert(`Successfully added ${name} to the scoreboard!`);
+      } else {
+        alert(result.error || "Failed to add person.");
+      }
+    } catch (error) {
+      console.error("Error adding person:", error);
+      alert("Error adding person. Please try again.");
+    }
   }
 }
 

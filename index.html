@@ -21,18 +21,6 @@
         <button id="scoreboardBtn" class="scoreboard-button">Scoreboard</button>
         <div class="result" id="result"></div>
       </div>
-
-      <div class="name-input">
-        <h3>Add Names</h3>
-        <input type="text" id="nameInput" placeholder="Enter a name" />
-        <button id="addNameBtn">Add Name</button>
-        <button id="clearNamesBtn">Clear All</button>
-      </div>
-
-      <div class="name-list">
-        <h3>Current Names:</h3>
-        <ul id="nameList"></ul>
-      </div>
     </div>
 
     <div
@@ -43,6 +31,10 @@
       <div class="scoreboard-header">
         <button id="backBtn" class="back-button">←</button>
         <h1>Scoreboard</h1>
+      </div>
+      <div class="scoreboard-controls">
+        <button id="updateBtn" class="update-button">Update</button>
+        <button id="addPersonBtn" class="add-button">Add</button>
       </div>
       <div class="scoreboard-table-container">
         <table id="scoreboardTable" class="scoreboard-table">
@@ -58,6 +50,32 @@
           </thead>
           <tbody id="scoreboardTableBody"></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Add Person Modal -->
+    <div id="addPersonModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button id="closeModalBtn" class="close-button">×</button>
+          <h2>Add New Person</h2>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="newPersonName">Name:</label>
+            <input type="text" id="newPersonName" placeholder="Enter name" />
+          </div>
+          <div class="form-group">
+            <label for="newPersonRole">Role:</label>
+            <select id="newPersonRole">
+              <option value="Developer">Developer</option>
+              <option value="Non-Developer">Non-Developer</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="addPersonSubmitBtn" class="add-submit-button">Add</button>
+        </div>
       </div>
     </div>
 
