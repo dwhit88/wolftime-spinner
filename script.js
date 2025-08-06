@@ -10,6 +10,13 @@ class SpinningWheel {
     this.clearNamesBtn = document.getElementById("clearNamesBtn");
     this.nameList = document.getElementById("nameList");
 
+    // Scoreboard elements
+    this.scoreboardBtn = document.getElementById("scoreboardBtn");
+    this.backBtn = document.getElementById("backBtn");
+    this.scoreboardContainer = document.getElementById("scoreboardContainer");
+    this.scoreboardTableBody = document.getElementById("scoreboardTableBody");
+    this.container = document.querySelector(".container");
+
     this.init();
   }
 
@@ -26,6 +33,10 @@ class SpinningWheel {
     this.nameInput.addEventListener("keypress", (e) => {
       if (e.key === "Enter") this.addName();
     });
+
+    // Scoreboard events
+    this.scoreboardBtn.addEventListener("click", () => this.showScoreboard());
+    this.backBtn.addEventListener("click", () => this.showTrivia());
   }
 
   renderWheel() {
@@ -143,6 +154,76 @@ class SpinningWheel {
 
     const index = Math.abs(hash) % gradients.length;
     return gradients[index];
+  }
+
+  showScoreboard() {
+    this.container.style.display = "none";
+    this.scoreboardContainer.style.display = "block";
+    this.loadScoreboardData();
+  }
+
+  showTrivia() {
+    this.scoreboardContainer.style.display = "none";
+    this.container.style.display = "block";
+  }
+
+  async loadScoreboardData() {
+    try {
+      const response = await fetch("standup_scoreboard.csv");
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const csvText = await response.text();
+      const data = this.parseCSV(csvText);
+      this.displayScoreboard(data);
+    } catch (error) {
+      console.error("Error loading scoreboard data:", error);
+      this.displayScoreboard([]);
+    }
+  }
+
+  parseCSV(csvText) {
+    const lines = csvText.trim().split("\n");
+    const headers = lines[0].split(",");
+    const data = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(",");
+      const row = {};
+      headers.forEach((header, index) => {
+        const value = index < values.length ? values[index].trim() : "";
+        row[header.trim()] = value;
+      });
+      data.push(row);
+    }
+
+    return data;
+  }
+
+  displayScoreboard(data) {
+    // Sort by points in descending order
+    const sortedData = data.sort((a, b) => {
+      const pointsA = parseInt(a.points) || 0;
+      const pointsB = parseInt(b.points) || 0;
+      return pointsB - pointsA;
+    });
+
+    this.scoreboardTableBody.innerHTML = "";
+
+    sortedData.forEach((row) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${row.Name || ""}</td>
+        <td>${row.isDev === "TRUE" ? "Developer" : "Non-Developer"}</td>
+        <td>${row.questionsAsked || "0"}</td>
+        <td>${row.questionsMissed || "0"}</td>
+        <td>${row.questionsAnsweredCorrectly || "0"}</td>
+        <td>${row.points || "0"}</td>
+      `;
+      this.scoreboardTableBody.appendChild(tr);
+    });
   }
 }
 
