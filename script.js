@@ -169,8 +169,7 @@ class SpinningWheel {
     let counter = 0;
     const totalCycles = 60 + Math.floor(Math.random() * 20); // 60-80 cycles (6-8 seconds)
     const interval = setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * this.names.length);
-      const randomName = this.names[randomIndex];
+      const randomName = this.getWeightedRandomName();
       display.textContent = randomName;
       display.style.background = this.getNameGradient(randomName);
 
@@ -178,9 +177,8 @@ class SpinningWheel {
       if (counter >= totalCycles) {
         clearInterval(interval);
 
-        // Select final winner
-        const winnerIndex = Math.floor(Math.random() * this.names.length);
-        const winner = this.names[winnerIndex];
+        // Select final winner using weighted probability
+        const winner = this.getWeightedRandomName();
 
         // Show final result
         display.textContent = winner;
@@ -191,6 +189,36 @@ class SpinningWheel {
         this.spinBtn.disabled = false;
       }
     }, 100); // Change name every 100ms
+  }
+
+  getWeightedRandomName() {
+    if (this.filteredPeople.length === 0)
+      return this.names[0] || "No names available";
+
+    // Calculate weights based on questions asked (inverse relationship)
+    const weights = this.filteredPeople.map((person) => {
+      const questionsAsked = parseInt(person.questionsAsked) || 0;
+      // Higher weight for people who have asked fewer questions
+      // Add 1 to avoid division by zero, and use inverse relationship
+      return 1 / (questionsAsked + 1);
+    });
+
+    // Calculate total weight
+    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+
+    // Generate random number between 0 and total weight
+    let random = Math.random() * totalWeight;
+
+    // Find the selected person based on weights
+    for (let i = 0; i < this.filteredPeople.length; i++) {
+      random -= weights[i];
+      if (random <= 0) {
+        return this.filteredPeople[i].Name;
+      }
+    }
+
+    // Fallback to last person if something goes wrong
+    return this.filteredPeople[this.filteredPeople.length - 1].Name;
   }
 
   getNameGradient(name) {
