@@ -34,6 +34,7 @@ function writeCSVData(data) {
     const csvWriter = createCsvWriter({
       path: CSV_FILE_PATH,
       header: [
+        { id: "Id", title: "Id" },
         { id: "Name", title: "Name" },
         { id: "isDev", title: "isDev" },
         { id: "questionsAsked", title: "questionsAsked" },
@@ -77,14 +78,14 @@ app.post("/api/scoreboard/update", async (req, res) => {
     const updatedCSVData = data.map((row) => {
       let updatedRow = { ...row };
 
-      // Mark selected names as removed
-      if (selectedNames && selectedNames.includes(row.Name)) {
+      // Mark selected IDs as removed
+      if (selectedNames && selectedNames.includes(row.Id)) {
         updatedRow.isRemoved = "TRUE";
       }
 
       // Update question values if provided
       if (updatedData) {
-        const updateEntry = updatedData.find((item) => item.name === row.Name);
+        const updateEntry = updatedData.find((item) => item.id === row.Id);
         if (updateEntry) {
           if (updateEntry.questionsAsked !== undefined) {
             updatedRow.questionsAsked = updateEntry.questionsAsked.toString();
@@ -166,8 +167,13 @@ app.post("/api/scoreboard/add", async (req, res) => {
         .json({ error: "Person with this name already exists" });
     }
 
+    // Find the highest ID to generate a new one
+    const maxId = Math.max(...data.map((row) => parseInt(row.Id) || 0), 0);
+    const newId = maxId + 1;
+
     // Create new person entry
     const newPerson = {
+      Id: newId.toString(),
       Name: name,
       isDev: isDev,
       questionsAsked: "0",

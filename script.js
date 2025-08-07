@@ -2,6 +2,7 @@ class SpinningWheel {
   constructor() {
     this.names = [];
     this.allPeople = [];
+    this.filteredPeople = [];
     this.isSpinning = false;
     this.wheel = document.getElementById("wheel");
     this.spinBtn = document.getElementById("spinBtn");
@@ -49,6 +50,7 @@ class SpinningWheel {
       console.error("Error loading names from CSV:", error);
       // Fallback to empty array if there's an error
       this.allPeople = [];
+      this.filteredPeople = [];
       this.names = [];
       this.renderWheel();
       this.renderNameChips();
@@ -59,7 +61,7 @@ class SpinningWheel {
     const isDevsOnly = this.devsOnlyToggle.checked;
 
     // Filter based on toggle state
-    this.names = this.allPeople
+    this.filteredPeople = this.allPeople
       .filter((person) => {
         if (isDevsOnly) {
           return person.isDev === "TRUE";
@@ -67,8 +69,9 @@ class SpinningWheel {
           return person.isDev === "FALSE";
         }
       })
-      .map((row) => row.Name)
-      .filter((name) => name && name.trim() !== ""); // Remove empty names
+      .filter((person) => person.Name && person.Name.trim() !== ""); // Remove empty names
+
+    this.names = this.filteredPeople.map((row) => row.Name);
 
     this.renderWheel();
     this.renderNameChips();
@@ -265,6 +268,7 @@ class SpinningWheel {
     sortedData.forEach((row, index) => {
       const tr = document.createElement("tr");
       tr.dataset.rowIndex = index;
+      tr.dataset.id = row.Id;
       tr.dataset.name = row.Name;
 
       if (this.isEditMode) {
@@ -363,12 +367,12 @@ class SpinningWheel {
     checkboxes.forEach((checkbox, index) => {
       checkbox.addEventListener("change", (e) => {
         const row = e.target.closest("tr");
-        const name = row.dataset.name;
+        const id = row.dataset.id;
 
         if (e.target.checked) {
-          this.selectedRows.add(name);
+          this.selectedRows.add(id);
         } else {
-          this.selectedRows.delete(name);
+          this.selectedRows.delete(id);
         }
       });
     });
@@ -442,12 +446,12 @@ class SpinningWheel {
         // Find the row data by index
         const rows = document.querySelectorAll("#scoreboardTableBody tr");
         const row = rows[rowIndex];
-        const name = row.dataset.name;
+        const id = row.dataset.id;
 
         // Find existing entry or create new one
-        let entry = updatedData.find((item) => item.name === name);
+        let entry = updatedData.find((item) => item.id === id);
         if (!entry) {
-          entry = { name: name };
+          entry = { id: id };
           updatedData.push(entry);
         }
 
