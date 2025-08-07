@@ -274,20 +274,20 @@ class SpinningWheel {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
 
-    // Use the hash to select from predefined gradient pairs
+    // Use the hash to select from predefined gradient pairs with better contrast
     const gradients = [
-      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", // Purple
-      "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)", // Pink
-      "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)", // Blue
-      "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)", // Green
-      "linear-gradient(135deg, #fa709a 0%, #fee140 100%)", // Orange
-      "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)", // Mint
-      "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)", // Rose
-      "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)", // Peach
-      "linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)", // Coral
-      "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)", // Lavender
-      "linear-gradient(135deg, #fad0c4 0%, #ffd1ff 100%)", // Soft Pink
-      "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)", // Warm Orange
+      "linear-gradient(135deg, #4c51bf 0%, #667eea 100%)", // Dark Purple
+      "linear-gradient(135deg, #d53f8c 0%, #f093fb 100%)", // Dark Pink
+      "linear-gradient(135deg, #3182ce 0%, #4facfe 100%)", // Dark Blue
+      "linear-gradient(135deg, #38a169 0%, #43e97b 100%)", // Dark Green
+      "linear-gradient(135deg, #dd6b20 0%, #fa709a 100%)", // Dark Orange
+      "linear-gradient(135deg, #319795 0%, #38f9d7 100%)", // Dark Teal
+      "linear-gradient(135deg, #c53030 0%, #f56565 100%)", // Dark Red
+      "linear-gradient(135deg, #b7791f 0%, #f6ad55 100%)", // Dark Amber
+      "linear-gradient(135deg, #805ad5 0%, #a18cd1 100%)", // Dark Purple
+      "linear-gradient(135deg, #2d3748 0%, #4a5568 100%)", // Dark Gray
+      "linear-gradient(135deg, #e53e3e 0%, #f56565 100%)", // Dark Red
+      "linear-gradient(135deg, #2b6cb0 0%, #4299e1 100%)", // Dark Blue
     ];
 
     const index = Math.abs(hash) % gradients.length;
