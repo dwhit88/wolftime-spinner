@@ -1,10 +1,13 @@
 class SpinningWheel {
   constructor() {
     this.names = [];
+    this.allPeople = [];
     this.isSpinning = false;
     this.wheel = document.getElementById("wheel");
     this.spinBtn = document.getElementById("spinBtn");
     this.result = document.getElementById("result");
+    this.devsOnlyToggle = document.getElementById("devsOnlyToggle");
+    this.nameChips = document.getElementById("nameChips");
 
     // Scoreboard elements
     this.scoreboardBtn = document.getElementById("scoreboardBtn");
@@ -37,19 +40,58 @@ class SpinningWheel {
 
       const data = await response.json();
 
-      // Filter out removed people and extract names
-      this.names = data
-        .filter((row) => row.isRemoved !== "TRUE")
-        .map((row) => row.Name)
-        .filter((name) => name && name.trim() !== ""); // Remove empty names
+      // Store the full data for filtering
+      this.allPeople = data.filter((row) => row.isRemoved !== "TRUE");
 
-      this.renderWheel();
+      // Apply current filter
+      this.filterNames();
     } catch (error) {
       console.error("Error loading names from CSV:", error);
       // Fallback to empty array if there's an error
+      this.allPeople = [];
       this.names = [];
       this.renderWheel();
+      this.renderNameChips();
     }
+  }
+
+  filterNames() {
+    const isDevsOnly = this.devsOnlyToggle.checked;
+
+    // Filter based on toggle state
+    this.names = this.allPeople
+      .filter((person) => {
+        if (isDevsOnly) {
+          return person.isDev === "TRUE";
+        } else {
+          return person.isDev === "FALSE";
+        }
+      })
+      .map((row) => row.Name)
+      .filter((name) => name && name.trim() !== ""); // Remove empty names
+
+    this.renderWheel();
+    this.renderNameChips();
+  }
+
+  renderNameChips() {
+    this.nameChips.innerHTML = "";
+
+    if (this.names.length === 0) {
+      const filterType = this.devsOnlyToggle.checked
+        ? "developers"
+        : "non-developers";
+      this.nameChips.innerHTML = `<div style="color: #666; font-style: italic;">No ${filterType} available</div>`;
+      return;
+    }
+
+    this.names.forEach((name) => {
+      const chip = document.createElement("div");
+      chip.className = "name-chip";
+      chip.textContent = name;
+      chip.style.background = this.getNameGradient(name);
+      this.nameChips.appendChild(chip);
+    });
   }
 
   init() {
@@ -60,6 +102,9 @@ class SpinningWheel {
 
   bindEvents() {
     this.spinBtn.addEventListener("click", () => this.spin());
+
+    // Toggle event
+    this.devsOnlyToggle.addEventListener("change", () => this.filterNames());
 
     // Scoreboard events
     this.scoreboardBtn.addEventListener("click", () => this.showScoreboard());
@@ -92,8 +137,10 @@ class SpinningWheel {
     this.wheel.innerHTML = "";
 
     if (this.names.length === 0) {
-      this.wheel.innerHTML =
-        '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 18px;">No names available</div>';
+      const filterType = this.devsOnlyToggle.checked
+        ? "developers"
+        : "non-developers";
+      this.wheel.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 18px;">No ${filterType} available</div>`;
       return;
     }
 
@@ -179,6 +226,8 @@ class SpinningWheel {
   showTrivia() {
     this.scoreboardContainer.style.display = "none";
     this.container.style.display = "block";
+    // Reset toggle to show all people by default
+    this.devsOnlyToggle.checked = false;
     // Reload names from CSV when switching back to trivia view
     this.loadNamesFromCSV();
   }
@@ -219,21 +268,43 @@ class SpinningWheel {
       tr.dataset.name = row.Name;
 
       if (this.isEditMode) {
-        // In edit mode, add checkbox cell first
+        // In edit mode, add checkbox cell first and make question fields editable
         tr.innerHTML = `
           <td><input type="checkbox" class="delete-checkbox"></td>
           <td>${row.Name || ""}</td>
-          <td>${row.isDev === "TRUE" ? "Developer" : "Non-Developer"}</td>
-          <td>${row.questionsAsked || "0"}</td>
-          <td>${row.questionsMissed || "0"}</td>
-          <td>${row.questionsAnsweredCorrectly || "0"}</td>
+          <td class="question-cell">
+            <div class="question-controls">
+              <button class="decrement-btn" data-field="questionsAsked" data-row="${index}">-</button>
+              <input type="number" class="question-input" data-field="questionsAsked" data-row="${index}" value="${
+          row.questionsAsked || "0"
+        }" min="0">
+              <button class="increment-btn" data-field="questionsAsked" data-row="${index}">+</button>
+            </div>
+          </td>
+          <td class="question-cell">
+            <div class="question-controls">
+              <button class="decrement-btn" data-field="questionsMissed" data-row="${index}">-</button>
+              <input type="number" class="question-input" data-field="questionsMissed" data-row="${index}" value="${
+          row.questionsMissed || "0"
+        }" min="0">
+              <button class="increment-btn" data-field="questionsMissed" data-row="${index}">+</button>
+            </div>
+          </td>
+          <td class="question-cell">
+            <div class="question-controls">
+              <button class="decrement-btn" data-field="questionsAnsweredCorrectly" data-row="${index}">-</button>
+              <input type="number" class="question-input" data-field="questionsAnsweredCorrectly" data-row="${index}" value="${
+          row.questionsAnsweredCorrectly || "0"
+        }" min="0">
+              <button class="increment-btn" data-field="questionsAnsweredCorrectly" data-row="${index}">+</button>
+            </div>
+          </td>
           <td>${row.points || "0"}</td>
         `;
       } else {
         // Normal mode, no checkbox
         tr.innerHTML = `
           <td>${row.Name || ""}</td>
-          <td>${row.isDev === "TRUE" ? "Developer" : "Non-Developer"}</td>
           <td>${row.questionsAsked || "0"}</td>
           <td>${row.questionsMissed || "0"}</td>
           <td>${row.questionsAnsweredCorrectly || "0"}</td>
@@ -244,9 +315,10 @@ class SpinningWheel {
       this.scoreboardTableBody.appendChild(tr);
     });
 
-    // Add event listeners for checkboxes if in edit mode
+    // Add event listeners for checkboxes and question controls if in edit mode
     if (this.isEditMode) {
       this.addCheckboxListeners();
+      this.addQuestionControlListeners();
     }
   }
 
@@ -302,15 +374,97 @@ class SpinningWheel {
     });
   }
 
-  async saveChanges() {
-    if (this.selectedRows.size === 0) {
-      this.loadScoreboardData();
-      return;
-    }
+  addQuestionControlListeners() {
+    // Add listeners for increment buttons
+    const incrementBtns = document.querySelectorAll(".increment-btn");
+    incrementBtns.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const input = e.target.parentNode.querySelector(".question-input");
+        const currentValue = parseInt(input.value) || 0;
+        input.value = currentValue + 1;
+        this.updatePointsForRow(e.target.closest("tr"));
+      });
+    });
 
+    // Add listeners for decrement buttons
+    const decrementBtns = document.querySelectorAll(".decrement-btn");
+    decrementBtns.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const input = e.target.parentNode.querySelector(".question-input");
+        const currentValue = parseInt(input.value) || 0;
+        if (currentValue > 0) {
+          input.value = currentValue - 1;
+          this.updatePointsForRow(e.target.closest("tr"));
+        }
+      });
+    });
+
+    // Add listeners for input changes to prevent negative values
+    const questionInputs = document.querySelectorAll(".question-input");
+    questionInputs.forEach((input) => {
+      input.addEventListener("change", (e) => {
+        const value = parseInt(e.target.value) || 0;
+        if (value < 0) {
+          e.target.value = 0;
+        }
+        this.updatePointsForRow(e.target.closest("tr"));
+      });
+    });
+  }
+
+  updatePointsForRow(row) {
+    const questionsAnsweredCorrectly =
+      parseInt(
+        row.querySelector('[data-field="questionsAnsweredCorrectly"]').value
+      ) || 0;
+    const questionsMissed =
+      parseInt(row.querySelector('[data-field="questionsMissed"]').value) || 0;
+    const points = Math.max(0, questionsAnsweredCorrectly - questionsMissed);
+
+    // Update the points cell
+    const pointsCell = row.querySelector("td:last-child");
+    if (pointsCell) {
+      pointsCell.textContent = points.toString();
+    }
+  }
+
+  async saveChanges() {
     try {
-      // Convert Set to Array for API call
-      const selectedNames = Array.from(this.selectedRows);
+      // Collect all the updated question values
+      const updatedData = [];
+      const questionInputs = document.querySelectorAll(".question-input");
+
+      questionInputs.forEach((input) => {
+        const field = input.dataset.field;
+        const rowIndex = parseInt(input.dataset.row);
+        const value = parseInt(input.value) || 0;
+
+        // Find the row data by index
+        const rows = document.querySelectorAll("#scoreboardTableBody tr");
+        const row = rows[rowIndex];
+        const name = row.dataset.name;
+
+        // Find existing entry or create new one
+        let entry = updatedData.find((item) => item.name === name);
+        if (!entry) {
+          entry = { name: name };
+          updatedData.push(entry);
+        }
+
+        entry[field] = value;
+      });
+
+      // Calculate points for each updated entry
+      updatedData.forEach((entry) => {
+        const questionsAnsweredCorrectly =
+          parseInt(entry.questionsAnsweredCorrectly) || 0;
+        const questionsMissed = parseInt(entry.questionsMissed) || 0;
+        const points = Math.max(
+          0,
+          questionsAnsweredCorrectly - questionsMissed
+        );
+        entry.points = points;
+      });
 
       // Send update request to server
       const response = await fetch("/api/scoreboard/update", {
@@ -318,7 +472,10 @@ class SpinningWheel {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ selectedNames }),
+        body: JSON.stringify({
+          selectedNames: Array.from(this.selectedRows),
+          updatedData: updatedData,
+        }),
       });
 
       if (!response.ok) {
@@ -326,9 +483,6 @@ class SpinningWheel {
       }
 
       const result = await response.json();
-
-      // Store the count before clearing
-      const removedCount = this.selectedRows.size;
 
       // Clear selected rows and reload data
       this.selectedRows.clear();

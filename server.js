@@ -68,30 +68,77 @@ app.get("/api/scoreboard", async (req, res) => {
 // POST endpoint to update CSV data
 app.post("/api/scoreboard/update", async (req, res) => {
   try {
-    const { selectedNames } = req.body;
-
-    if (!selectedNames || !Array.isArray(selectedNames)) {
-      return res.status(400).json({ error: "selectedNames array is required" });
-    }
+    const { selectedNames, updatedData } = req.body;
 
     // Read current data
     const data = await readCSVData();
 
-    // Update isRemoved field for selected names
-    const updatedData = data.map((row) => {
-      if (selectedNames.includes(row.Name)) {
-        return { ...row, isRemoved: "TRUE" };
+    // Update the data
+    const updatedCSVData = data.map((row) => {
+      let updatedRow = { ...row };
+
+      // Mark selected names as removed
+      if (selectedNames && selectedNames.includes(row.Name)) {
+        updatedRow.isRemoved = "TRUE";
       }
-      return row;
+
+      // Update question values if provided
+      if (updatedData) {
+        const updateEntry = updatedData.find((item) => item.name === row.Name);
+        if (updateEntry) {
+          if (updateEntry.questionsAsked !== undefined) {
+            updatedRow.questionsAsked = updateEntry.questionsAsked.toString();
+          }
+          if (updateEntry.questionsMissed !== undefined) {
+            updatedRow.questionsMissed = updateEntry.questionsMissed.toString();
+          }
+          if (updateEntry.questionsAnsweredCorrectly !== undefined) {
+            updatedRow.questionsAnsweredCorrectly =
+              updateEntry.questionsAnsweredCorrectly.toString();
+          }
+
+          // Calculate points: questionsAnsweredCorrectly - questionsMissed (minimum 0)
+          const questionsAnsweredCorrectly =
+            parseInt(updateEntry.questionsAnsweredCorrectly) || 0;
+          const questionsMissed = parseInt(updateEntry.questionsMissed) || 0;
+          const points = Math.max(
+            0,
+            questionsAnsweredCorrectly - questionsMissed
+          );
+          updatedRow.points = points.toString();
+
+          // Also update points if it's provided in the update data
+          if (updateEntry.points !== undefined) {
+            updatedRow.points = updateEntry.points.toString();
+          }
+        }
+      }
+
+      return updatedRow;
     });
 
     // Write updated data back to CSV
-    await writeCSVData(updatedData);
+    await writeCSVData(updatedCSVData);
+
+    const removedCount = selectedNames ? selectedNames.length : 0;
+    const updatedCount = updatedData ? updatedData.length : 0;
+
+    let message = "";
+    if (removedCount > 0 && updatedCount > 0) {
+      message = `Successfully removed ${removedCount} people and updated ${updatedCount} entries`;
+    } else if (removedCount > 0) {
+      message = `Successfully marked ${removedCount} people as removed`;
+    } else if (updatedCount > 0) {
+      message = `Successfully updated ${updatedCount} entries`;
+    } else {
+      message = "No changes made";
+    }
 
     res.json({
       success: true,
-      message: `Successfully marked ${selectedNames.length} people as removed`,
-      updatedCount: selectedNames.length,
+      message: message,
+      removedCount: removedCount,
+      updatedCount: updatedCount,
     });
   } catch (error) {
     console.error("Error updating CSV:", error);

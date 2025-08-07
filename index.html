@@ -21,6 +21,15 @@
         <button id="scoreboardBtn" class="scoreboard-button">Scoreboard</button>
         <div class="result" id="result"></div>
       </div>
+
+      <div class="filter-controls">
+        <label class="toggle-label">
+          <input type="checkbox" id="devsOnlyToggle" />
+          <span class="toggle-slider"></span>
+          <span class="toggle-text">Devs Only</span>
+        </label>
+        <div class="name-chips" id="nameChips"></div>
+      </div>
     </div>
 
     <div
@@ -41,7 +50,6 @@
           <thead>
             <tr>
               <th>Name</th>
-              <th>Role</th>
               <th>Questions Asked</th>
               <th>Questions Missed</th>
               <th>Questions Answered Correctly</th>
