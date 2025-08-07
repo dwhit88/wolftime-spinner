@@ -200,6 +200,36 @@ app.post("/api/scoreboard/add", async (req, res) => {
   }
 });
 
+// POST endpoint to clear scoreboard (reset all question values to 0)
+app.post("/api/scoreboard/clear", async (req, res) => {
+  try {
+    // Read current data
+    const data = await readCSVData();
+
+    // Reset all question values to 0 and recalculate points
+    const updatedData = data.map((row) => {
+      const updatedRow = { ...row };
+      updatedRow.questionsAsked = "0";
+      updatedRow.questionsMissed = "0";
+      updatedRow.questionsAnsweredCorrectly = "0";
+      updatedRow.points = "0";
+      return updatedRow;
+    });
+
+    // Write updated data back to CSV
+    await writeCSVData(updatedData);
+
+    res.json({
+      success: true,
+      message: "Scoreboard cleared successfully",
+      clearedCount: updatedData.length,
+    });
+  } catch (error) {
+    console.error("Error clearing scoreboard:", error);
+    res.status(500).json({ error: "Failed to clear scoreboard data" });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

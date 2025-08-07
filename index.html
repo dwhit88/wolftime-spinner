@@ -44,6 +44,16 @@
       <div class="scoreboard-controls">
         <button id="updateBtn" class="update-button">Update</button>
         <button id="addPersonBtn" class="add-button">Add</button>
+        <button id="cancelBtn" class="cancel-button" style="display: none">
+          Cancel
+        </button>
+        <button
+          id="clearScoreboardBtn"
+          class="clear-button"
+          style="display: none"
+        >
+          Clear Scoreboard
+        </button>
       </div>
       <div class="scoreboard-table-container">
         <table id="scoreboardTable" class="scoreboard-table">
@@ -83,6 +93,52 @@
         </div>
         <div class="modal-footer">
           <button id="addPersonSubmitBtn" class="add-submit-button">Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unsaved Changes Modal -->
+    <div id="unsavedChangesModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Unsaved Changes</h2>
+        </div>
+        <div class="modal-body">
+          <p>
+            You have unsaved changes. Are you sure you want to go back without
+            saving?
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button id="confirmBackBtn" class="confirm-button">
+            Yes, Go Back
+          </button>
+          <button id="cancelBackBtn" class="cancel-modal-button">
+            No, Stay Here
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clear Scoreboard Modal -->
+    <div id="clearScoreboardModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Clear Scoreboard</h2>
+        </div>
+        <div class="modal-body">
+          <p>
+            Are you sure you want to clear the scoreboard? This will reset all
+            question values to 0 and this action cannot be undone.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button id="confirmClearBtn" class="confirm-button">
+            Yes, Clear Scoreboard
+          </button>
+          <button id="cancelClearBtn" class="cancel-modal-button">
+            No, Keep Data
+          </button>
         </div>
       </div>
     </div>

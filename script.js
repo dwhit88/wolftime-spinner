@@ -17,6 +17,8 @@ class SpinningWheel {
     this.scoreboardTableBody = document.getElementById("scoreboardTableBody");
     this.updateBtn = document.getElementById("updateBtn");
     this.addPersonBtn = document.getElementById("addPersonBtn");
+    this.cancelBtn = document.getElementById("cancelBtn");
+    this.clearScoreboardBtn = document.getElementById("clearScoreboardBtn");
     this.container = document.querySelector(".container");
     this.isEditMode = false;
     this.selectedRows = new Set();
@@ -27,6 +29,16 @@ class SpinningWheel {
     this.newPersonName = document.getElementById("newPersonName");
     this.newPersonRole = document.getElementById("newPersonRole");
     this.addPersonSubmitBtn = document.getElementById("addPersonSubmitBtn");
+
+    // Unsaved changes modal elements
+    this.unsavedChangesModal = document.getElementById("unsavedChangesModal");
+    this.confirmBackBtn = document.getElementById("confirmBackBtn");
+    this.cancelBackBtn = document.getElementById("cancelBackBtn");
+
+    // Clear scoreboard modal elements
+    this.clearScoreboardModal = document.getElementById("clearScoreboardModal");
+    this.confirmClearBtn = document.getElementById("confirmClearBtn");
+    this.cancelClearBtn = document.getElementById("cancelClearBtn");
 
     this.init();
   }
@@ -111,10 +123,20 @@ class SpinningWheel {
 
     // Scoreboard events
     this.scoreboardBtn.addEventListener("click", () => this.showScoreboard());
-    this.backBtn.addEventListener("click", () => this.showTrivia());
+    this.backBtn.addEventListener("click", () => {
+      if (this.isEditMode) {
+        this.showUnsavedChangesModal();
+      } else {
+        this.showTrivia();
+      }
+    });
     this.updateBtn.addEventListener("click", () => this.toggleEditMode());
     this.addPersonBtn.addEventListener("click", () =>
       this.showAddPersonModal()
+    );
+    this.cancelBtn.addEventListener("click", () => this.cancelEditMode());
+    this.clearScoreboardBtn.addEventListener("click", () =>
+      this.showClearScoreboardModal()
     );
 
     // Modal events
@@ -132,6 +154,30 @@ class SpinningWheel {
     this.newPersonName.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
         this.addNewPerson();
+      }
+    });
+
+    // Unsaved changes modal events
+    this.confirmBackBtn.addEventListener("click", () => this.confirmGoBack());
+    this.cancelBackBtn.addEventListener("click", () =>
+      this.hideUnsavedChangesModal()
+    );
+    this.unsavedChangesModal.addEventListener("click", (e) => {
+      if (e.target === this.unsavedChangesModal) {
+        this.hideUnsavedChangesModal();
+      }
+    });
+
+    // Clear scoreboard modal events
+    this.confirmClearBtn.addEventListener("click", () =>
+      this.confirmClearScoreboard()
+    );
+    this.cancelClearBtn.addEventListener("click", () =>
+      this.hideClearScoreboardModal()
+    );
+    this.clearScoreboardModal.addEventListener("click", (e) => {
+      if (e.target === this.clearScoreboardModal) {
+        this.hideClearScoreboardModal();
       }
     });
   }
@@ -305,31 +351,19 @@ class SpinningWheel {
           <td><input type="checkbox" class="delete-checkbox"></td>
           <td>${row.Name || ""}</td>
           <td class="question-cell">
-            <div class="question-controls">
-              <button class="decrement-btn" data-field="questionsAsked" data-row="${index}">-</button>
-              <input type="number" class="question-input" data-field="questionsAsked" data-row="${index}" value="${
+            <input type="number" class="question-input" data-field="questionsAsked" data-row="${index}" value="${
           row.questionsAsked || "0"
         }" min="0">
-              <button class="increment-btn" data-field="questionsAsked" data-row="${index}">+</button>
-            </div>
           </td>
           <td class="question-cell">
-            <div class="question-controls">
-              <button class="decrement-btn" data-field="questionsMissed" data-row="${index}">-</button>
-              <input type="number" class="question-input" data-field="questionsMissed" data-row="${index}" value="${
+            <input type="number" class="question-input" data-field="questionsMissed" data-row="${index}" value="${
           row.questionsMissed || "0"
         }" min="0">
-              <button class="increment-btn" data-field="questionsMissed" data-row="${index}">+</button>
-            </div>
           </td>
           <td class="question-cell">
-            <div class="question-controls">
-              <button class="decrement-btn" data-field="questionsAnsweredCorrectly" data-row="${index}">-</button>
-              <input type="number" class="question-input" data-field="questionsAnsweredCorrectly" data-row="${index}" value="${
+            <input type="number" class="question-input" data-field="questionsAnsweredCorrectly" data-row="${index}" value="${
           row.questionsAnsweredCorrectly || "0"
         }" min="0">
-              <button class="increment-btn" data-field="questionsAnsweredCorrectly" data-row="${index}">+</button>
-            </div>
           </td>
           <td>${row.points || "0"}</td>
         `;
@@ -361,6 +395,9 @@ class SpinningWheel {
       this.updateBtn.textContent = "Save";
       this.updateBtn.classList.add("save-button");
       this.updateBtn.classList.remove("update-button");
+      this.addPersonBtn.style.display = "none";
+      this.cancelBtn.style.display = "inline-block";
+      this.clearScoreboardBtn.style.display = "inline-block";
       this.addDeleteColumn();
       // Reload the scoreboard data to show checkboxes
       this.loadScoreboardData();
@@ -368,9 +405,24 @@ class SpinningWheel {
       this.updateBtn.textContent = "Update";
       this.updateBtn.classList.add("update-button");
       this.updateBtn.classList.remove("save-button");
+      this.addPersonBtn.style.display = "inline-block";
+      this.cancelBtn.style.display = "none";
+      this.clearScoreboardBtn.style.display = "none";
       this.removeDeleteColumn();
       this.saveChanges();
     }
+  }
+
+  cancelEditMode() {
+    this.isEditMode = false;
+    this.updateBtn.textContent = "Update";
+    this.updateBtn.classList.add("update-button");
+    this.updateBtn.classList.remove("save-button");
+    this.addPersonBtn.style.display = "inline-block";
+    this.cancelBtn.style.display = "none";
+    this.clearScoreboardBtn.style.display = "none";
+    this.removeDeleteColumn();
+    this.loadScoreboardData();
   }
 
   addDeleteColumn() {
@@ -407,31 +459,7 @@ class SpinningWheel {
   }
 
   addQuestionControlListeners() {
-    // Add listeners for increment buttons
-    const incrementBtns = document.querySelectorAll(".increment-btn");
-    incrementBtns.forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const input = e.target.parentNode.querySelector(".question-input");
-        const currentValue = parseInt(input.value) || 0;
-        input.value = currentValue + 1;
-        this.updatePointsForRow(e.target.closest("tr"));
-      });
-    });
-
-    // Add listeners for decrement buttons
-    const decrementBtns = document.querySelectorAll(".decrement-btn");
-    decrementBtns.forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const input = e.target.parentNode.querySelector(".question-input");
-        const currentValue = parseInt(input.value) || 0;
-        if (currentValue > 0) {
-          input.value = currentValue - 1;
-          this.updatePointsForRow(e.target.closest("tr"));
-        }
-      });
-    });
-
-    // Add listeners for input changes to prevent negative values
+    // Add listeners for input changes to prevent negative values and update points
     const questionInputs = document.querySelectorAll(".question-input");
     questionInputs.forEach((input) => {
       input.addEventListener("change", (e) => {
@@ -537,6 +565,67 @@ class SpinningWheel {
   hideAddPersonModal() {
     this.addPersonModal.style.display = "none";
     this.newPersonName.value = "";
+  }
+
+  showUnsavedChangesModal() {
+    this.unsavedChangesModal.style.display = "block";
+  }
+
+  hideUnsavedChangesModal() {
+    this.unsavedChangesModal.style.display = "none";
+  }
+
+  confirmGoBack() {
+    this.hideUnsavedChangesModal();
+    this.cancelEditMode();
+    this.showTrivia();
+  }
+
+  showClearScoreboardModal() {
+    this.clearScoreboardModal.style.display = "block";
+  }
+
+  hideClearScoreboardModal() {
+    this.clearScoreboardModal.style.display = "none";
+  }
+
+  async confirmClearScoreboard() {
+    try {
+      this.hideClearScoreboardModal();
+
+      // Send request to clear all question values
+      const response = await fetch("/api/scoreboard/clear", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Exit edit mode and reload data
+        this.isEditMode = false;
+        this.updateBtn.textContent = "Update";
+        this.updateBtn.classList.add("update-button");
+        this.updateBtn.classList.remove("save-button");
+        this.addPersonBtn.style.display = "inline-block";
+        this.cancelBtn.style.display = "none";
+        this.clearScoreboardBtn.style.display = "none";
+        this.removeDeleteColumn();
+        this.loadScoreboardData();
+        alert("Scoreboard cleared successfully!");
+      } else {
+        alert(result.error || "Failed to clear scoreboard.");
+      }
+    } catch (error) {
+      console.error("Error clearing scoreboard:", error);
+      alert("Error clearing scoreboard. Please try again.");
+    }
   }
 
   async addNewPerson() {
