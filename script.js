@@ -10,6 +10,17 @@ class SpinningWheel {
     this.devsOnlyToggle = document.getElementById("devsOnlyToggle");
     this.nameChips = document.getElementById("nameChips");
 
+    // Session management
+    this.SESSION_KEY = "wolftimeSpinnerSession";
+    this.SESSION_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+    this.ACTIVITY_EVENTS = [
+      "click",
+      "keypress",
+      "mousemove",
+      "scroll",
+      "touchstart",
+    ];
+
     // Login elements
     this.loginModal = document.getElementById("loginModal");
     this.passphrase = document.getElementById("passphrase");
@@ -118,6 +129,57 @@ class SpinningWheel {
   init() {
     this.bindEvents();
     this.bindLoginEvents();
+    this.bindActivityEvents();
+    this.checkSession();
+  }
+
+  bindActivityEvents() {
+    // Throttle the refresh to prevent too many updates
+    let lastRefresh = 0;
+    const THROTTLE_DELAY = 1000; // 1 second
+
+    const refreshSession = () => {
+      const now = Date.now();
+      if (now - lastRefresh > THROTTLE_DELAY) {
+        const session = localStorage.getItem(this.SESSION_KEY);
+        if (session) {
+          // Only refresh if we have a valid session
+          this.createSession();
+          lastRefresh = now;
+        }
+      }
+    };
+
+    // Add event listeners for all activity events
+    this.ACTIVITY_EVENTS.forEach((eventType) => {
+      document.addEventListener(eventType, refreshSession, { passive: true });
+    });
+  }
+
+  checkSession() {
+    const session = localStorage.getItem(this.SESSION_KEY);
+    if (session) {
+      const { timestamp } = JSON.parse(session);
+      const now = Date.now();
+      if (now - timestamp < this.SESSION_DURATION) {
+        // Session is still valid
+        this.loginModal.style.display = "none";
+        this.loadNamesFromCSV();
+        this.renderWheel();
+        return;
+      }
+      // Session expired, remove it
+      localStorage.removeItem(this.SESSION_KEY);
+    }
+    // Show login modal if no valid session
+    this.loginModal.style.display = "block";
+  }
+
+  createSession() {
+    const session = {
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
   }
 
   bindLoginEvents() {
@@ -146,6 +208,7 @@ class SpinningWheel {
       if (data.success) {
         this.loginModal.style.display = "none";
         this.loginError.style.display = "none";
+        this.createSession();
         this.loadNamesFromCSV();
         this.renderWheel();
       } else {
