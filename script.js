@@ -10,6 +10,12 @@ class SpinningWheel {
     this.devsOnlyToggle = document.getElementById("devsOnlyToggle");
     this.nameChips = document.getElementById("nameChips");
 
+    // Login elements
+    this.loginModal = document.getElementById("loginModal");
+    this.passphrase = document.getElementById("passphrase");
+    this.loginSubmitBtn = document.getElementById("loginSubmitBtn");
+    this.loginError = document.getElementById("loginError");
+
     // Scoreboard elements
     this.scoreboardBtn = document.getElementById("scoreboardBtn");
     this.backBtn = document.getElementById("backBtn");
@@ -110,9 +116,47 @@ class SpinningWheel {
   }
 
   init() {
-    this.loadNamesFromCSV();
-    this.renderWheel();
     this.bindEvents();
+    this.bindLoginEvents();
+  }
+
+  bindLoginEvents() {
+    this.loginSubmitBtn.addEventListener("click", () => this.checkPassphrase());
+    this.passphrase.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        this.checkPassphrase();
+      }
+    });
+  }
+
+  async checkPassphrase() {
+    try {
+      const response = await fetch("/api/verify-passphrase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          passphrase: this.passphrase.value,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        this.loginModal.style.display = "none";
+        this.loginError.style.display = "none";
+        this.loadNamesFromCSV();
+        this.renderWheel();
+      } else {
+        this.loginError.style.display = "block";
+        this.passphrase.value = "";
+      }
+    } catch (error) {
+      console.error("Error verifying passphrase:", error);
+      this.loginError.style.display = "block";
+      this.passphrase.value = "";
+    }
   }
 
   bindEvents() {

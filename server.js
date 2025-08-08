@@ -4,14 +4,26 @@ const fs = require("fs");
 const path = require("path");
 const csv = require("csv-parser");
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
+require("dotenv").config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const PASSPHRASE = process.env.PASSPHRASE || "";
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(".")); // Serve static files from current directory
+
+// Verify passphrase endpoint
+app.post("/api/verify-passphrase", (req, res) => {
+  const { passphrase } = req.body;
+  if (passphrase === PASSPHRASE) {
+    res.json({ success: true });
+  } else {
+    res.status(401).json({ error: "Invalid passphrase" });
+  }
+});
 
 // CSV file path
 const CSV_FILE_PATH = path.join(__dirname, "standup_scoreboard.csv");

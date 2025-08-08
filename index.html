@@ -7,6 +7,35 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal" style="display: block">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Enter Passphrase</h2>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="passphrase">Passphrase:</label>
+            <input
+              type="password"
+              id="passphrase"
+              placeholder="Enter passphrase"
+            />
+          </div>
+          <div
+            id="loginError"
+            class="error-message"
+            style="display: none; color: red; margin-top: 10px"
+          >
+            Invalid passphrase. Please try again.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="loginSubmitBtn" class="confirm-button">Submit</button>
+        </div>
+      </div>
+    </div>
+
     <div class="container">
       <h1>Stand Up Trivia</h1>
 
