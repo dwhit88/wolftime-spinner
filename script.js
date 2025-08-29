@@ -348,12 +348,13 @@ class SpinningWheel {
     if (this.filteredPeople.length === 0)
       return this.names[0] || "No names available";
 
-    // Calculate weights based on questions asked (inverse relationship)
+    // Calculate weights based on questions asked (enhanced inverse relationship)
     const weights = this.filteredPeople.map((person) => {
       const questionsAsked = parseInt(person.questionsAsked) || 0;
-      // Higher weight for people who have asked fewer questions
-      // Add 1 to avoid division by zero, and use inverse relationship
-      return 1 / (questionsAsked + 1);
+      // Enhanced weight for people who have asked fewer questions
+      // Use square of inverse for more aggressive weighting
+      // Add 1 to avoid division by zero
+      return 1 / Math.pow(questionsAsked + 1, 2);
     });
 
     // Calculate total weight

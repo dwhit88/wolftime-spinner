@@ -173,8 +173,8 @@ app.post("/api/scoreboard/add", async (req, res) => {
       Name: name,
       isDev: isDev,
       questionsAsked: "0",
-      questionsMissed: "",
-      questionsAnsweredCorrectly: "",
+      questionsMissed: "0",
+      questionsAnsweredCorrectly: "0",
       points: "0",
       isRemoved: "FALSE",
     };
