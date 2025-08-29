@@ -7,7 +7,8 @@ class SpinningWheel {
     this.wheel = document.getElementById("wheel");
     this.spinBtn = document.getElementById("spinBtn");
     this.result = document.getElementById("result");
-    this.devsOnlyToggle = document.getElementById("devsOnlyToggle");
+    this.wholeTeamRadio = document.getElementById("wholeTeamRadio");
+    this.engineersRadio = document.getElementById("engineersRadio");
     this.nameChips = document.getElementById("nameChips");
 
     // Session management
@@ -87,15 +88,17 @@ class SpinningWheel {
   }
 
   filterNames() {
-    const isDevsOnly = this.devsOnlyToggle.checked;
+    const isEngineersOnly = this.engineersRadio.checked;
 
-    // Filter based on toggle state
+    // Filter based on radio selection
     this.filteredPeople = this.allPeople
       .filter((person) => {
-        if (isDevsOnly) {
+        if (isEngineersOnly) {
+          // Engineers only - same as previous "Dev Only" behavior
           return person.isDev === "TRUE";
         } else {
-          return person.isDev === "FALSE";
+          // Whole Team - include everyone
+          return true;
         }
       })
       .filter((person) => person.Name && person.Name.trim() !== ""); // Remove empty names
@@ -110,9 +113,9 @@ class SpinningWheel {
     this.nameChips.innerHTML = "";
 
     if (this.names.length === 0) {
-      const filterType = this.devsOnlyToggle.checked
-        ? "developers"
-        : "non-developers";
+      const filterType = this.engineersRadio.checked
+        ? "engineers"
+        : "team members";
       this.nameChips.innerHTML = `<div style="color: #666; font-style: italic;">No ${filterType} available</div>`;
       return;
     }
@@ -225,8 +228,9 @@ class SpinningWheel {
   bindEvents() {
     this.spinBtn.addEventListener("click", () => this.spin());
 
-    // Toggle event
-    this.devsOnlyToggle.addEventListener("change", () => this.filterNames());
+    // Radio button events
+    this.wholeTeamRadio.addEventListener("change", () => this.filterNames());
+    this.engineersRadio.addEventListener("change", () => this.filterNames());
 
     // Scoreboard events
     this.scoreboardBtn.addEventListener("click", () => this.showScoreboard());
@@ -293,9 +297,9 @@ class SpinningWheel {
     this.wheel.innerHTML = "";
 
     if (this.names.length === 0) {
-      const filterType = this.devsOnlyToggle.checked
-        ? "developers"
-        : "non-developers";
+      const filterType = this.engineersRadio.checked
+        ? "engineers"
+        : "team members";
       this.wheel.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 18px;">No ${filterType} available</div>`;
       return;
     }
@@ -411,8 +415,9 @@ class SpinningWheel {
   showTrivia() {
     this.scoreboardContainer.style.display = "none";
     this.container.style.display = "block";
-    // Reset toggle to show all people by default
-    this.devsOnlyToggle.checked = false;
+    // Reset radio buttons to show whole team by default
+    this.wholeTeamRadio.checked = true;
+    this.engineersRadio.checked = false;
     // Reload names from CSV when switching back to trivia view
     this.loadNamesFromCSV();
   }

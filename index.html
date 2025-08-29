@@ -52,11 +52,29 @@
       </div>
 
       <div class="filter-controls">
-        <label class="toggle-label">
-          <input type="checkbox" id="devsOnlyToggle" />
-          <span class="toggle-slider"></span>
-          <span class="toggle-text">Devs Only</span>
-        </label>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="teamFilter"
+              value="wholeTeam"
+              id="wholeTeamRadio"
+              checked
+            />
+            <span class="radio-custom"></span>
+            <span class="radio-text">Whole Team</span>
+          </label>
+          <label class="radio-label">
+            <input
+              type="radio"
+              name="teamFilter"
+              value="engineers"
+              id="engineersRadio"
+            />
+            <span class="radio-custom"></span>
+            <span class="radio-text">Engineers</span>
+          </label>
+        </div>
         <div class="name-chips" id="nameChips"></div>
       </div>
     </div>
