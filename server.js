@@ -1,9 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
-const csv = require("csv-parser");
-const createCsvWriter = require("csv-writer").createObjectCsvWriter;
+const GoogleSheetsService = require("./googleSheetsService");
 require("dotenv").config();
 
 const app = express();
@@ -25,69 +22,56 @@ app.post("/api/verify-passphrase", (req, res) => {
   }
 });
 
-// CSV file path
-const CSV_FILE_PATH = path.join(__dirname, "standup_scoreboard.csv");
-
-// Helper function to read CSV data
-function readCSVData() {
-  return new Promise((resolve, reject) => {
-    const results = [];
-    fs.createReadStream(CSV_FILE_PATH)
-      .pipe(csv())
-      .on("data", (data) => results.push(data))
-      .on("end", () => resolve(results))
-      .on("error", (error) => reject(error));
-  });
+// Initialize Google Sheets service
+let googleSheetsService;
+try {
+  googleSheetsService = new GoogleSheetsService();
+} catch (error) {
+  console.error("Failed to initialize Google Sheets service:", error);
+  process.exit(1);
 }
 
-// Helper function to write CSV data
-function writeCSVData(data) {
-  return new Promise((resolve, reject) => {
-    const csvWriter = createCsvWriter({
-      path: CSV_FILE_PATH,
-      header: [
-        { id: "Id", title: "Id" },
-        { id: "Name", title: "Name" },
-        { id: "isDev", title: "isDev" },
-        { id: "questionsAsked", title: "questionsAsked" },
-        { id: "questionsMissed", title: "questionsMissed" },
-        {
-          id: "questionsAnsweredCorrectly",
-          title: "questionsAnsweredCorrectly",
-        },
-        { id: "points", title: "points" },
-        { id: "isRemoved", title: "isRemoved" },
-      ],
-    });
-
-    csvWriter
-      .writeRecords(data)
-      .then(() => resolve())
-      .catch((error) => reject(error));
-  });
+// Helper function to read data from Google Sheets
+async function readData() {
+  try {
+    return await googleSheetsService.readData();
+  } catch (error) {
+    console.error("Error reading from Google Sheets:", error);
+    throw error;
+  }
 }
 
-// GET endpoint to read CSV data
+// Helper function to write data to Google Sheets
+async function writeData(data) {
+  try {
+    return await googleSheetsService.writeData(data);
+  } catch (error) {
+    console.error("Error writing to Google Sheets:", error);
+    throw error;
+  }
+}
+
+// GET endpoint to read data from Google Sheets
 app.get("/api/scoreboard", async (req, res) => {
   try {
-    const data = await readCSVData();
+    const data = await readData();
     res.json(data);
   } catch (error) {
-    console.error("Error reading CSV:", error);
-    res.status(500).json({ error: "Failed to read CSV data" });
+    console.error("Error reading from Google Sheets:", error);
+    res.status(500).json({ error: "Failed to read data from Google Sheets" });
   }
 });
 
-// POST endpoint to update CSV data
+// POST endpoint to update data in Google Sheets
 app.post("/api/scoreboard/update", async (req, res) => {
   try {
     const { selectedNames, updatedData } = req.body;
 
     // Read current data
-    const data = await readCSVData();
+    const data = await readData();
 
     // Update the data
-    const updatedCSVData = data.map((row) => {
+    const updatedSheetData = data.map((row) => {
       let updatedRow = { ...row };
 
       // Mark selected IDs as removed
@@ -130,8 +114,8 @@ app.post("/api/scoreboard/update", async (req, res) => {
       return updatedRow;
     });
 
-    // Write updated data back to CSV
-    await writeCSVData(updatedCSVData);
+    // Write updated data back to Google Sheets
+    await writeData(updatedSheetData);
 
     const removedCount = selectedNames ? selectedNames.length : 0;
     const updatedCount = updatedData ? updatedData.length : 0;
@@ -154,12 +138,12 @@ app.post("/api/scoreboard/update", async (req, res) => {
       updatedCount: updatedCount,
     });
   } catch (error) {
-    console.error("Error updating CSV:", error);
-    res.status(500).json({ error: "Failed to update CSV data" });
+    console.error("Error updating Google Sheets:", error);
+    res.status(500).json({ error: "Failed to update data in Google Sheets" });
   }
 });
 
-// POST endpoint to add new person to CSV
+// POST endpoint to add new person to Google Sheets
 app.post("/api/scoreboard/add", async (req, res) => {
   try {
     const { name, isDev } = req.body;
@@ -169,7 +153,7 @@ app.post("/api/scoreboard/add", async (req, res) => {
     }
 
     // Read current data
-    const data = await readCSVData();
+    const data = await readData();
 
     // Check if person already exists
     const existingPerson = data.find((row) => row.Name === name);
@@ -198,8 +182,8 @@ app.post("/api/scoreboard/add", async (req, res) => {
     // Add new person to data
     data.push(newPerson);
 
-    // Write updated data back to CSV
-    await writeCSVData(data);
+    // Write updated data back to Google Sheets
+    await writeData(data);
 
     res.json({
       success: true,
@@ -216,7 +200,7 @@ app.post("/api/scoreboard/add", async (req, res) => {
 app.post("/api/scoreboard/clear", async (req, res) => {
   try {
     // Read current data
-    const data = await readCSVData();
+    const data = await readData();
 
     // Reset all question values to 0 and recalculate points
     const updatedData = data.map((row) => {
@@ -228,8 +212,8 @@ app.post("/api/scoreboard/clear", async (req, res) => {
       return updatedRow;
     });
 
-    // Write updated data back to CSV
-    await writeCSVData(updatedData);
+    // Write updated data back to Google Sheets
+    await writeData(updatedData);
 
     res.json({
       success: true,
@@ -245,5 +229,5 @@ app.post("/api/scoreboard/clear", async (req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`CSV file path: ${CSV_FILE_PATH}`);
+  console.log(`Google Sheets ID: ${process.env.GOOGLE_SPREADSHEET_ID}`);
 });

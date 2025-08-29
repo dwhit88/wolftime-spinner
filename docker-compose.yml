@@ -4,14 +4,15 @@ services:
   wolftime-spinner:
     build: .
     ports:
-      - "3000:3000"
-    volumes:
-      # Mount the CSV file so data persists between container restarts
-      - ./standup_scoreboard.csv:/app/standup_scoreboard.csv
+      - "${PORT}:${PORT}"
     environment:
       - NODE_ENV=production
-      - PASSPHRASE=${PASSPHRASE:-wolftime2024}
-      - PORT=${PORT:-3000}
+      - PASSPHRASE=${PASSPHRASE}
+      - PORT=${PORT}
+      - GOOGLE_SPREADSHEET_ID=${GOOGLE_SPREADSHEET_ID}
+      - GOOGLE_SHEET_RANGE=${GOOGLE_SHEET_RANGE:-Sheet1!A:H}
+      - GOOGLE_SERVICE_ACCOUNT_KEY=${GOOGLE_SERVICE_ACCOUNT_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
     restart: unless-stopped
     healthcheck:
       test:
@@ -19,7 +20,7 @@ services:
           "CMD",
           "node",
           "-e",
-          "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+          "require('http').get('http://localhost:${PORT}', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
         ]
       interval: 30s
       timeout: 10s

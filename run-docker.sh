@@ -23,21 +23,31 @@ fi
 
 echo -e "${GREEN}✅ Docker and Docker Compose are installed${NC}"
 
-# Check if CSV file exists
-if [ ! -f "standup_scoreboard.csv" ]; then
-    echo -e "${YELLOW}⚠️  standup_scoreboard.csv not found. Creating a default one...${NC}"
-    echo "Id,Name,isDev,questionsAsked,questionsMissed,questionsAnsweredCorrectly,points,isRemoved" > standup_scoreboard.csv
-    echo "1,Example Person,TRUE,0,0,0,0,FALSE" >> standup_scoreboard.csv
-fi
-
-echo -e "${GREEN}✅ CSV file ready${NC}"
-
 # Check if .env file exists
 if [ ! -f ".env" ]; then
     echo -e "${YELLOW}⚠️  .env file not found. Creating with default values...${NC}"
     echo "PASSPHRASE=wolftime2024" > .env
     echo "PORT=3000" >> .env
     echo "NODE_ENV=development" >> .env
+    echo "" >> .env
+    echo "# Google Sheets Configuration" >> .env
+    echo "GOOGLE_SPREADSHEET_ID=your_spreadsheet_id_here" >> .env
+    echo "GOOGLE_SHEET_RANGE=Sheet1!A:H" >> .env
+    echo "GOOGLE_SERVICE_ACCOUNT_KEY=your_service_account_key_here" >> .env
+    echo "" >> .env
+    echo -e "${YELLOW}⚠️  Please update the .env file with your Google Sheets configuration before running the app.${NC}"
+    echo -e "${YELLOW}   See env.example for detailed instructions.${NC}"
+fi
+
+# Check if Google Sheets configuration is set
+if [ -f ".env" ]; then
+    if ! grep -q "GOOGLE_SPREADSHEET_ID=" .env || grep -q "GOOGLE_SPREADSHEET_ID=your_spreadsheet_id_here" .env; then
+        echo -e "${YELLOW}⚠️  Google Sheets configuration not found or incomplete in .env file${NC}"
+        echo -e "${YELLOW}   Please configure GOOGLE_SPREADSHEET_ID and GOOGLE_SERVICE_ACCOUNT_KEY${NC}"
+        echo -e "${YELLOW}   See env.example for detailed instructions.${NC}"
+    else
+        echo -e "${GREEN}✅ Google Sheets configuration found${NC}"
+    fi
 fi
 
 echo -e "${GREEN}✅ Environment configuration ready${NC}"
