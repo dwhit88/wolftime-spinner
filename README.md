@@ -2,6 +2,8 @@
 
 A modern web application for Stand Up Trivia with a spinning wheel to randomly select participants and a comprehensive scoreboard system.
 
+Note: This is a vibe-coded web app I made for fun 😎
+
 ## Features
 
 - **Spinning Wheel**: Animated wheel that randomly selects participants with weighted probability
