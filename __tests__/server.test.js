@@ -36,21 +36,9 @@ describe("Server API Endpoints", () => {
 
     // Set up environment variables
     process.env.PORT = "3001";
-    process.env.PASSPHRASE = "test-passphrase";
     process.env.GOOGLE_SPREADSHEET_ID = "test-spreadsheet-id";
 
     // Create routes manually instead of importing server
-    const PASSPHRASE = process.env.PASSPHRASE;
-
-    // Verify passphrase endpoint
-    app.post("/api/verify-passphrase", (req, res) => {
-      const { passphrase } = req.body;
-      if (passphrase === PASSPHRASE) {
-        res.json({ success: true });
-      } else {
-        res.status(401).json({ error: "Invalid passphrase" });
-      }
-    });
 
     // Helper function to read data from Google Sheets
     async function readData() {
@@ -257,35 +245,6 @@ describe("Server API Endpoints", () => {
 
   afterEach(() => {
     jest.resetModules();
-  });
-
-  describe("POST /api/verify-passphrase", () => {
-    it("should return success for valid passphrase", async () => {
-      const response = await request(app)
-        .post("/api/verify-passphrase")
-        .send({ passphrase: "test-passphrase" })
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-    });
-
-    it("should return 401 for invalid passphrase", async () => {
-      const response = await request(app)
-        .post("/api/verify-passphrase")
-        .send({ passphrase: "wrong-passphrase" })
-        .expect(401);
-
-      expect(response.body.error).toBe("Invalid passphrase");
-    });
-
-    it("should handle missing passphrase", async () => {
-      const response = await request(app)
-        .post("/api/verify-passphrase")
-        .send({})
-        .expect(401);
-
-      expect(response.body.error).toBe("Invalid passphrase");
-    });
   });
 
   describe("GET /api/scoreboard", () => {

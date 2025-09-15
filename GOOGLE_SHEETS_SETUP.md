@@ -68,8 +68,6 @@ GOOGLE_SPREADSHEET_ID=your_actual_spreadsheet_id_here
 # Required: Your service account key (paste the entire JSON content)
 GOOGLE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"...","private_key_id":"...","private_key":"...","client_email":"...","client_id":"...","auth_uri":"...","token_uri":"...","auth_provider_x509_cert_url":"...","client_x509_cert_url":"..."}
 
-# Your app passphrase
-PASSPHRASE=your_app_passphrase_here
 
 # Optional: Port (defaults to 3000)
 PORT=3000

@@ -201,7 +201,6 @@ const setupTestEnvironment = () => {
 
   // Setup default environment variables
   process.env.PORT = "3001";
-  process.env.PASSPHRASE = "test-passphrase";
   process.env.GOOGLE_SPREADSHEET_ID = "test-spreadsheet-id";
   process.env.GOOGLE_SHEET_RANGE = "Sheet1!A:H";
 
@@ -221,7 +220,6 @@ const cleanupTestEnvironment = () => {
 
   // Clean up environment variables
   delete process.env.PORT;
-  delete process.env.PASSPHRASE;
   delete process.env.GOOGLE_SPREADSHEET_ID;
   delete process.env.GOOGLE_SHEET_RANGE;
   delete process.env.GOOGLE_SERVICE_ACCOUNT_KEY;

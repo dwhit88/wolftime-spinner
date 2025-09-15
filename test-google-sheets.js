@@ -25,9 +25,7 @@ async function testGoogleSheets() {
   console.log(
     `  GOOGLE_API_KEY: ${process.env.GOOGLE_API_KEY ? "✅ Set" : "❌ Missing"}`
   );
-  console.log(
-    `  PASSPHRASE: ${process.env.PASSPHRASE ? "✅ Set" : "❌ Missing"}\n`
-  );
+  console.log();
 
   // Check if we have the required credentials
   if (!process.env.GOOGLE_SPREADSHEET_ID) {

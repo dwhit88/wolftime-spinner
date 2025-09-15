@@ -40,11 +40,6 @@ const dom = new JSDOM(`
   
   <div id="scoreboardTableBody"></div>
   
-  <div id="loginModal" style="display: none;">
-    <input type="password" id="passphrase">
-    <button id="loginSubmitBtn">Login</button>
-    <div id="loginError" style="display: none;">Invalid passphrase</div>
-  </div>
   
   <div id="addPersonModal" style="display: none;">
     <input type="text" id="newPersonName">
@@ -120,7 +115,6 @@ describe("SpinningWheel", () => {
         this.isSpinning = false;
         this.isEditMode = false;
         this.selectedRows = new Set();
-        this.SESSION_DURATION = 60 * 60 * 1000;
 
         // Mock DOM elements
         this.wheel = document.getElementById("wheel");
@@ -164,36 +158,6 @@ describe("SpinningWheel", () => {
         // if (this.result) {
         //   this.result.textContent = `Winner: ${this.getWeightedRandomName()}!`;
         // }
-      }
-
-      createSession() {
-        const session = {
-          timestamp: Date.now(),
-        };
-        localStorage.setItem("wolftimeSpinnerSession", JSON.stringify(session));
-      }
-
-      checkSession() {
-        const session = localStorage.getItem("wolftimeSpinnerSession");
-        if (session) {
-          const { timestamp } = JSON.parse(session);
-          const now = Date.now();
-          if (now - timestamp < this.SESSION_DURATION) {
-            // Session is valid, hide login modal
-            const loginModal = document.getElementById("loginModal");
-            if (loginModal) {
-              loginModal.style.display = "none";
-            }
-            return true;
-          }
-          localStorage.removeItem("wolftimeSpinnerSession");
-        }
-        // Session expired or doesn't exist, show login modal
-        const loginModal = document.getElementById("loginModal");
-        if (loginModal) {
-          loginModal.style.display = "block";
-        }
-        return false;
       }
 
       async loadNamesFromCSV() {
@@ -443,7 +407,6 @@ describe("SpinningWheel", () => {
       expect(wheel.isSpinning).toBe(false);
       expect(wheel.isEditMode).toBe(false);
       expect(wheel.selectedRows).toBeInstanceOf(Set);
-      expect(wheel.SESSION_DURATION).toBe(60 * 60 * 1000); // 1 hour
     });
 
     it("should bind events on initialization", () => {
@@ -453,49 +416,6 @@ describe("SpinningWheel", () => {
       expect(wheel).toBeDefined();
       expect(wheel.names).toEqual([]);
       expect(wheel.allPeople).toEqual([]);
-    });
-  });
-
-  describe("Session Management", () => {
-    beforeEach(() => {
-      wheel = new SpinningWheel();
-    });
-
-    it("should create session on successful login", () => {
-      const mockTimestamp = 1234567890;
-      jest.spyOn(Date, "now").mockReturnValue(mockTimestamp);
-
-      wheel.createSession();
-
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        "wolftimeSpinnerSession",
-        JSON.stringify({ timestamp: mockTimestamp })
-      );
-    });
-
-    it("should check session validity", () => {
-      const mockTimestamp = Date.now() - 30 * 60 * 1000; // 30 minutes ago
-      const mockSession = JSON.stringify({ timestamp: mockTimestamp });
-
-      localStorage.getItem.mockReturnValue(mockSession);
-
-      wheel.checkSession();
-
-      expect(document.getElementById("loginModal").style.display).toBe("none");
-    });
-
-    it("should show login modal for expired session", () => {
-      const mockTimestamp = Date.now() - 2 * 60 * 60 * 1000; // 2 hours ago
-      const mockSession = JSON.stringify({ timestamp: mockTimestamp });
-
-      localStorage.getItem.mockReturnValue(mockSession);
-
-      wheel.checkSession();
-
-      expect(document.getElementById("loginModal").style.display).toBe("block");
-      expect(localStorage.removeItem).toHaveBeenCalledWith(
-        "wolftimeSpinnerSession"
-      );
     });
   });
 

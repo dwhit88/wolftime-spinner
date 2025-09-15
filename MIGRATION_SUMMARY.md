@@ -60,7 +60,6 @@ Required variables:
 
 - `GOOGLE_SPREADSHEET_ID` - Your spreadsheet ID
 - `GOOGLE_SERVICE_ACCOUNT_KEY` - Your service account JSON key
-- `PASSPHRASE` - Your app passphrase
 
 ### 3. Test the Integration
 

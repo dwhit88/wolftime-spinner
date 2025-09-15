@@ -5,22 +5,11 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const PASSPHRASE = process.env.PASSPHRASE || "";
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(".")); // Serve static files from current directory
-
-// Verify passphrase endpoint
-app.post("/api/verify-passphrase", (req, res) => {
-  const { passphrase } = req.body;
-  if (passphrase === PASSPHRASE) {
-    res.json({ success: true });
-  } else {
-    res.status(401).json({ error: "Invalid passphrase" });
-  }
-});
 
 // Initialize Google Sheets service
 let googleSheetsService;

@@ -26,7 +26,7 @@ echo -e "${GREEN}✅ Docker and Docker Compose are installed${NC}"
 # Check if .env file exists
 if [ ! -f ".env" ]; then
     echo -e "${YELLOW}⚠️  .env file not found. Creating with default values...${NC}"
-    echo "PASSPHRASE=wolftime2024" > .env
+    echo "# Wolftime Spinner Configuration" > .env
     echo "PORT=3000" >> .env
     echo "NODE_ENV=development" >> .env
     echo "" >> .env

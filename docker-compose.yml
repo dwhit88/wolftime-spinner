@@ -7,7 +7,6 @@ services:
       - "${PORT}:${PORT}"
     environment:
       - NODE_ENV=production
-      - PASSPHRASE=${PASSPHRASE}
       - PORT=${PORT}
       - GOOGLE_SPREADSHEET_ID=${GOOGLE_SPREADSHEET_ID}
       - GOOGLE_SHEET_RANGE=${GOOGLE_SHEET_RANGE:-Sheet1!A:H}

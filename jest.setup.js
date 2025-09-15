@@ -1,6 +1,5 @@
 // Mock environment variables for testing
 process.env.PORT = "3001";
-process.env.PASSPHRASE = "test-passphrase";
 process.env.GOOGLE_SPREADSHEET_ID = "test-spreadsheet-id";
 process.env.GOOGLE_SHEET_RANGE = "Sheet1!A:H";
 process.env.GOOGLE_SERVICE_ACCOUNT_KEY = JSON.stringify({

@@ -35,21 +35,9 @@ describe("Integration Tests", () => {
 
     // Set up environment variables
     process.env.PORT = "3001";
-    process.env.PASSPHRASE = "test-passphrase";
     process.env.GOOGLE_SPREADSHEET_ID = "test-spreadsheet-id";
 
     // Create routes manually instead of importing server
-    const PASSPHRASE = process.env.PASSPHRASE;
-
-    // Verify passphrase endpoint
-    app.post("/api/verify-passphrase", (req, res) => {
-      const { passphrase } = req.body;
-      if (passphrase === PASSPHRASE) {
-        res.json({ success: true });
-      } else {
-        res.status(401).json({ error: "Invalid passphrase" });
-      }
-    });
 
     // Helper function to read data from Google Sheets
     async function readData() {
@@ -379,31 +367,6 @@ describe("Integration Tests", () => {
           isRemoved: "FALSE",
         },
       ]);
-    });
-  });
-
-  describe("Authentication and Authorization Flow", () => {
-    it("should require valid passphrase for protected operations", async () => {
-      // Try to access scoreboard without authentication
-      const response = await request(app)
-        .post("/api/scoreboard/add")
-        .send({ name: "Test", isDev: "TRUE" })
-        .expect(500); // This will fail due to GoogleSheetsService initialization error in test environment
-
-      // Verify passphrase validation works
-      const authResponse = await request(app)
-        .post("/api/verify-passphrase")
-        .send({ passphrase: "wrong-passphrase" })
-        .expect(401);
-
-      expect(authResponse.body.error).toBe("Invalid passphrase");
-
-      const validAuthResponse = await request(app)
-        .post("/api/verify-passphrase")
-        .send({ passphrase: "test-passphrase" })
-        .expect(200);
-
-      expect(validAuthResponse.body.success).toBe(true);
     });
   });
 

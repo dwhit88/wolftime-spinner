@@ -11,23 +11,6 @@ class SpinningWheel {
     this.engineersRadio = document.getElementById("engineersRadio");
     this.nameChips = document.getElementById("nameChips");
 
-    // Session management
-    this.SESSION_KEY = "wolftimeSpinnerSession";
-    this.SESSION_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
-    this.ACTIVITY_EVENTS = [
-      "click",
-      "keypress",
-      "mousemove",
-      "scroll",
-      "touchstart",
-    ];
-
-    // Login elements
-    this.loginModal = document.getElementById("loginModal");
-    this.passphrase = document.getElementById("passphrase");
-    this.loginSubmitBtn = document.getElementById("loginSubmitBtn");
-    this.loginError = document.getElementById("loginError");
-
     // Scoreboard elements
     this.scoreboardBtn = document.getElementById("scoreboardBtn");
     this.backBtn = document.getElementById("backBtn");
@@ -131,98 +114,8 @@ class SpinningWheel {
 
   init() {
     this.bindEvents();
-    this.bindLoginEvents();
-    this.bindActivityEvents();
-    this.checkSession();
-  }
-
-  bindActivityEvents() {
-    // Throttle the refresh to prevent too many updates
-    let lastRefresh = 0;
-    const THROTTLE_DELAY = 1000; // 1 second
-
-    const refreshSession = () => {
-      const now = Date.now();
-      if (now - lastRefresh > THROTTLE_DELAY) {
-        const session = localStorage.getItem(this.SESSION_KEY);
-        if (session) {
-          // Only refresh if we have a valid session
-          this.createSession();
-          lastRefresh = now;
-        }
-      }
-    };
-
-    // Add event listeners for all activity events
-    this.ACTIVITY_EVENTS.forEach((eventType) => {
-      document.addEventListener(eventType, refreshSession, { passive: true });
-    });
-  }
-
-  checkSession() {
-    const session = localStorage.getItem(this.SESSION_KEY);
-    if (session) {
-      const { timestamp } = JSON.parse(session);
-      const now = Date.now();
-      if (now - timestamp < this.SESSION_DURATION) {
-        // Session is still valid
-        this.loginModal.style.display = "none";
-        this.loadNamesFromCSV();
-        this.renderWheel();
-        return;
-      }
-      // Session expired, remove it
-      localStorage.removeItem(this.SESSION_KEY);
-    }
-    // Show login modal if no valid session
-    this.loginModal.style.display = "block";
-  }
-
-  createSession() {
-    const session = {
-      timestamp: Date.now(),
-    };
-    localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
-  }
-
-  bindLoginEvents() {
-    this.loginSubmitBtn.addEventListener("click", () => this.checkPassphrase());
-    this.passphrase.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        this.checkPassphrase();
-      }
-    });
-  }
-
-  async checkPassphrase() {
-    try {
-      const response = await fetch("/api/verify-passphrase", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          passphrase: this.passphrase.value,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        this.loginModal.style.display = "none";
-        this.loginError.style.display = "none";
-        this.createSession();
-        this.loadNamesFromCSV();
-        this.renderWheel();
-      } else {
-        this.loginError.style.display = "block";
-        this.passphrase.value = "";
-      }
-    } catch (error) {
-      console.error("Error verifying passphrase:", error);
-      this.loginError.style.display = "block";
-      this.passphrase.value = "";
-    }
+    this.loadNamesFromCSV();
+    this.renderWheel();
   }
 
   bindEvents() {

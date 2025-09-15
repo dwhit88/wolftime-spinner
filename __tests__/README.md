@@ -20,7 +20,6 @@ __tests__/
 
 #### Server Tests (`server.test.js`)
 
-- **Passphrase Verification**: Tests the `/api/verify-passphrase` endpoint
 - **Scoreboard Operations**: Tests all CRUD operations for the scoreboard
 - **Data Validation**: Tests input validation and error handling
 - **Business Logic**: Tests points calculation and data processing
@@ -35,7 +34,6 @@ __tests__/
 #### Frontend Tests (`spinningWheel.test.js`)
 
 - **Class Initialization**: Tests constructor and property setup
-- **Session Management**: Tests login/logout and session persistence
 - **Data Loading**: Tests API integration and data filtering
 - **UI Interactions**: Tests wheel spinning, scoreboard display, and modal management
 - **Business Logic**: Tests name filtering and weighted random selection
@@ -170,7 +168,7 @@ it("should validate person data structure", () => {
 
 - **DOM Mocking**: Use JSDOM for browser environment simulation
 - **Fetch Mocking**: Mock HTTP requests and responses
-- **LocalStorage Mocking**: Mock browser storage for session management
+- **LocalStorage Mocking**: Mock browser storage for testing
 
 ### Environment Variables
 

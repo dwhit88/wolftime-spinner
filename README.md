@@ -142,7 +142,6 @@ docker-compose build --no-cache
 
 Create a `.env` file in the root directory with the following variables:
 
-- `PASSPHRASE`: Authentication passphrase (default: wolftime2024)
 - `PORT`: Server port (default: 3000)
 - `NODE_ENV`: Environment mode (default: development, set to production in Docker)
 - `GOOGLE_SPREADSHEET_ID`: Your Google Spreadsheet ID (required)
@@ -153,7 +152,6 @@ Example `.env` file:
 
 ```env
 # Security Configuration
-PASSPHRASE=wolftime2024
 
 # Server Configuration
 PORT=3000
